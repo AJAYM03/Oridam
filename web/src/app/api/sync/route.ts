@@ -24,7 +24,7 @@ export async function POST() {
       do {
         const res = await drive.files.list({
           q: "trashed = false",
-          fields: 'nextPageToken, files(id, name, mimeType, size, parents, modifiedTime, thumbnailLink)',
+          fields: 'nextPageToken, files(id, name, mimeType, size, parents, modifiedTime, thumbnailLink, imageMediaMetadata/time)',
           pageSize: 1000,
           pageToken: pageToken,
         });
@@ -34,6 +34,9 @@ export async function POST() {
         
         if (files.length > 0) {
            const transaction = files.map(file => {
+             const imageTimeStr = file.imageMediaMetadata?.time;
+             const imageTime = imageTimeStr ? new Date(imageTimeStr) : null;
+             
              return prisma.driveFile.upsert({
                where: { id: file.id as string },
                update: {
@@ -42,6 +45,7 @@ export async function POST() {
                  size: file.size ? BigInt(file.size) : 0n,
                  parentId: file.parents && file.parents.length > 0 ? file.parents[0] : null,
                  thumbnailLink: file.thumbnailLink || null,
+                 imageTime: imageTime,
                  updatedAt: file.modifiedTime ? new Date(file.modifiedTime) : new Date(),
                },
                create: {
@@ -52,6 +56,7 @@ export async function POST() {
                  size: file.size ? BigInt(file.size) : 0n,
                  parentId: file.parents && file.parents.length > 0 ? file.parents[0] : null,
                  thumbnailLink: file.thumbnailLink || null,
+                 imageTime: imageTime,
                  updatedAt: file.modifiedTime ? new Date(file.modifiedTime) : new Date(),
                }
              });

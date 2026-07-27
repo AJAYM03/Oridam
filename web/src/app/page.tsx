@@ -23,15 +23,23 @@ export default async function Home() {
             <p className="text-[#888888] text-lg">Use all your Google accounts as one.</p>
           </div>
           {accounts.length > 0 && (
-            <Link 
-              href="/drive"
-              className="bg-white text-black px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center gap-2"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13.6745C13.1441 7 12.6354 6.78929 12.2603 6.41421L10.7397 4.8934C10.3646 4.51832 9.85592 4.30761 9.32548 4.30761H5C3.89543 4.30761 3 5.20304 3 6.30761V7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Open File Explorer
-            </Link>
+            <div className="flex gap-4">
+              <Link 
+                href="/drive"
+                className="bg-white text-black px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center gap-2"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V9C21 7.89543 20.1046 7 19 7H13.6745C13.1441 7 12.6354 6.78929 12.2603 6.41421L10.7397 4.8934C10.3646 4.51832 9.85592 4.30761 9.32548 4.30761H5C3.89543 4.30761 3 5.20304 3 6.30761V7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Open File Explorer
+              </Link>
+              <Link 
+                href="/photos" 
+                className="bg-[#1A1A1A] border border-[#333333] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#222222] transition-colors"
+              >
+                Open Photos Timeline
+              </Link>
+            </div>
           )}
         </header>
 

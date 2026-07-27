@@ -41,10 +41,16 @@ export default async function DrivePage({
   return (
     <main className="min-h-screen bg-[#0A0A0A] text-[#EAEAEA] font-sans selection:bg-white selection:text-black">
       {/* Navbar */}
-      <nav className="border-b border-[#333333] bg-[#111111] px-8 py-4 flex items-center justify-between">
-        <Link href="/" className="text-xl font-medium tracking-tight hover:text-white transition-colors">
-          Oridam.
-        </Link>
+      <nav className="border-b border-[#333333] bg-[#111111] px-8 py-4 flex items-center justify-between sticky top-0 z-40">
+        <div className="flex items-center gap-8">
+          <Link href="/" className="text-xl font-medium tracking-tight hover:text-white transition-colors">
+            Oridam.
+          </Link>
+          <div className="flex gap-4 text-sm font-medium">
+            <Link href="/drive" className="text-white border-b-2 border-white pb-1">Drive</Link>
+            <Link href="/photos" className="text-[#888888] hover:text-white transition-colors">Photos</Link>
+          </div>
+        </div>
         <div className="flex gap-4">
           <input 
             type="text" 
