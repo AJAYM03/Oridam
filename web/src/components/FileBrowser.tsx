@@ -30,6 +30,8 @@ function formatBytes(bytes: number) {
 
 export function FileBrowser({ files, currentPath, isGridView = false }: { files: ClientVirtualFile[], currentPath: string, isGridView?: boolean }) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState<{name: string, progress: number}[]>([]);
 
   useEffect(() => {
     if (selectedIndex === null) return;
@@ -56,10 +58,100 @@ export function FileBrowser({ files, currentPath, isGridView = false }: { files:
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedIndex, files]);
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const droppedFiles = Array.from(e.dataTransfer.files);
+      
+      const newUploads = droppedFiles.map(f => ({ name: f.name, progress: 0 }));
+      setUploadingFiles(prev => [...prev, ...newUploads]);
+
+      for (const file of droppedFiles) {
+        try {
+          // 1. Initialize Upload (Smart Router calculates which account has space)
+          const initRes = await fetch('/api/upload/init', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: file.name,
+              mimeType: file.type || 'application/octet-stream',
+              size: file.size,
+              parentId: null // Always upload to root for now
+            })
+          });
+
+          if (!initRes.ok) throw new Error("Init failed");
+          const { uploadUrl, tempId, accountId } = await initRes.json();
+
+          // 2. Direct PUT to Google Drive
+          const uploadRes = await fetch(uploadUrl, {
+            method: 'PUT',
+            headers: {
+              'Content-Length': file.size.toString()
+            },
+            body: file
+          });
+
+          if (!uploadRes.ok) throw new Error("Google upload failed");
+          const googleFile = await uploadRes.json();
+
+          // 3. Complete Upload (Save to our DB)
+          await fetch('/api/upload/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: googleFile.id,
+              name: googleFile.name,
+              mimeType: googleFile.mimeType,
+              size: file.size,
+              parentId: null,
+              accountId: accountId
+            })
+          });
+
+          // Refresh the page to show new file
+          window.location.reload();
+
+        } catch (error) {
+          console.error("Upload error for", file.name, error);
+          alert(`Failed to upload ${file.name}`);
+        }
+      }
+      setUploadingFiles([]);
+    }
+  };
+
   const selectedFile = selectedIndex !== null ? files[selectedIndex] : null;
 
   return (
-    <>
+    <div 
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      className={`relative min-h-[60vh] transition-colors ${isDragging ? 'bg-[#1A1A1A] border-2 border-dashed border-[#888888] rounded-xl' : ''}`}
+    >
+      {/* Uploading Overlay */}
+      {uploadingFiles.length > 0 && (
+        <div className="absolute inset-0 z-40 bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl">
+          <div className="bg-[#111111] border border-[#333333] p-6 rounded-xl shadow-2xl flex flex-col items-center gap-4">
+            <div className="w-8 h-8 border-4 border-[#333333] border-t-white rounded-full animate-spin"></div>
+            <p className="font-medium text-white">Uploading {uploadingFiles.length} file(s)...</p>
+          </div>
+        </div>
+      )}
+      
       {/* Lightbox Modal */}
       {selectedFile && selectedFile.type === "file" && (
         <div className="fixed inset-0 z-50 bg-black/95 flex flex-col backdrop-blur-md">
@@ -233,6 +325,6 @@ export function FileBrowser({ files, currentPath, isGridView = false }: { files:
           })}
         </div>
       )}
-    </>
+    </div>
   );
 }
