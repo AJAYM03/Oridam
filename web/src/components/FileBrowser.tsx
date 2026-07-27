@@ -91,6 +91,13 @@ export function FileBrowser({ files, currentPath }: { files: ClientVirtualFile[]
                  src={selectedFile.thumbnailLink ? selectedFile.thumbnailLink.replace('=s220', '=s2048') : `/api/download?id=${selectedFile.id}&account=${selectedFile.accountId}`}
                  alt={selectedFile.name}
                  className="w-full h-full object-contain drop-shadow-2xl rounded-sm"
+                 referrerPolicy="no-referrer"
+                 onError={(e) => {
+                   const fallbackSrc = `/api/download?id=${selectedFile.id}&account=${selectedFile.accountId}`;
+                   if (e.currentTarget.src !== fallbackSrc && !e.currentTarget.src.includes('/api/download')) {
+                     e.currentTarget.src = fallbackSrc;
+                   }
+                 }}
                />
             ) : selectedFile.mimeType.startsWith('video/') ? (
                <video 
