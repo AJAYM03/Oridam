@@ -187,8 +187,8 @@ export function FileBrowser({ files, currentPath, isGridView = false }: { files:
           ))}
         </>
       ) : (
-        {/* List View (File Explorer) */}
         <div className="flex flex-col gap-1">
+          {/* List View (File Explorer) */}
           {files.length === 0 && (
             <div className="text-center py-20 text-[#888888]">
               This folder is empty.

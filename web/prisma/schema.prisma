@@ -43,6 +43,7 @@ model DriveFile {
   parentId  String?  // Google Drive parent folder ID
   thumbnailLink String? // Direct CDN link for fast rendering
   imageTime DateTime? // EXIF Date Taken (for accurate chronological sorting)
+  source    String   @default("DRIVE") // 'DRIVE' or 'PHOTOS'
   trashed   Boolean  @default(false)
   updatedAt DateTime @updatedAt // Last modified time from Google Drive
 

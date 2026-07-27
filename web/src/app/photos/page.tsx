@@ -4,15 +4,17 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { FileBrowser, ClientVirtualFile } from "@/components/FileBrowser";
 
-export default async function PhotosPage() {
+export default async function PhotosPage(props: { searchParams: Promise<{ sort?: string }> }) {
   const cookieStore = await cookies();
   const userId = cookieStore.get("oridam_user_id")?.value;
+  const searchParams = await props.searchParams;
+  const sortOrder = searchParams?.sort === "asc" ? "asc" : "desc";
 
   if (!userId) {
     redirect("/");
   }
 
-  // Query ALL images across all accounts, sorted by the EXIF Date Taken (newest first)
+  // Query ALL images across all accounts, sorted by the EXIF Date Taken
   const images = await prisma.driveFile.findMany({
     where: {
       account: { userId },
@@ -20,8 +22,8 @@ export default async function PhotosPage() {
       trashed: false,
     },
     orderBy: [
-      { imageTime: "desc" },
-      { updatedAt: "desc" },
+      { imageTime: { sort: sortOrder, nulls: 'last' } },
+      { updatedAt: sortOrder },
     ],
   });
 
@@ -58,6 +60,23 @@ export default async function PhotosPage() {
             <p className="text-[#888888]">
               {images.length} photos merged seamlessly across your accounts.
             </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-[#888888] text-sm">Sort:</span>
+            <div className="bg-[#1A1A1A] border border-[#333333] rounded-lg p-1 flex">
+              <Link 
+                href="/photos?sort=desc" 
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${sortOrder === 'desc' ? 'bg-[#333333] text-white' : 'text-[#888888] hover:text-white'}`}
+              >
+                Newest First
+              </Link>
+              <Link 
+                href="/photos?sort=asc" 
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${sortOrder === 'asc' ? 'bg-[#333333] text-white' : 'text-[#888888] hover:text-white'}`}
+              >
+                Oldest First
+              </Link>
+            </div>
           </div>
         </header>
 
