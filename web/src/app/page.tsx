@@ -1,65 +1,85 @@
-import Image from "next/image";
+import { prisma } from "@/lib/prisma";
+import { cookies } from "next/headers";
+import Link from "next/link";
 
-export default function Home() {
+export default async function Home() {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get("oridam_user_id")?.value;
+
+  let accounts: any[] = [];
+  if (userId) {
+    accounts = await prisma.googleAccount.findMany({
+      where: { userId },
+    });
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="min-h-screen bg-[#0A0A0A] text-white p-12 font-sans selection:bg-white selection:text-black">
+      <div className="max-w-4xl mx-auto space-y-12">
+        <header>
+          <h1 className="text-4xl font-medium tracking-tight mb-2">Oridam.</h1>
+          <p className="text-[#888888] text-lg">Use all your Google accounts as one.</p>
+        </header>
+
+        <section className="space-y-6">
+          <h2 className="text-xl font-medium text-[#EAEAEA]">Connected Storage</h2>
+          
+          {accounts.length === 0 ? (
+            <div className="p-8 border border-[#333333] rounded-xl text-center bg-[#111111]">
+              <p className="text-[#888888] mb-6">No accounts connected yet. The magic starts here.</p>
+              <Link 
+                href="/api/auth/google" 
+                className="bg-white text-black px-5 py-2.5 rounded-lg font-medium hover:bg-[#EAEAEA] transition-colors"
+              >
+                Connect First Google Account
+              </Link>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {accounts.map(account => {
+                const totalGB = (Number(account.totalSpace) / (1024 ** 3)).toFixed(2);
+                const usedGB = (Number(account.usedSpace) / (1024 ** 3)).toFixed(2);
+                const percentage = (Number(account.usedSpace) / Number(account.totalSpace)) * 100;
+                
+                return (
+                  <div key={account.id} className="p-5 border border-[#333333] rounded-xl flex justify-between items-center bg-[#111111]">
+                    <div className="space-y-1">
+                      <p className="font-medium text-[#EAEAEA]">{account.email}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-32 h-1.5 bg-[#333333] rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-white rounded-full" 
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-[#888888]">
+                          {usedGB} GB / {totalGB} GB
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1 bg-[#1A1A1A] border border-[#333333] rounded-full">
+                      <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
+                      <span className="text-xs text-[#888888] font-medium uppercase tracking-wider">Active</span>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              <div className="pt-4">
+                <Link 
+                  href="/api/auth/google" 
+                  className="inline-flex items-center gap-2 bg-[#1A1A1A] border border-[#333333] text-[#EAEAEA] px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#222222] transition-colors"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 3.5V12.5M3.5 8H12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Connect Another Account
+                </Link>
+              </div>
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
   );
 }
