@@ -80,7 +80,75 @@ export async function POST() {
         pageToken = res.data.nextPageToken || undefined;
       } while (pageToken);
 
-      } while (pageToken);
+      // 2. Fetch from Google Photos Library API
+      let photosPageToken: string | undefined = undefined;
+      do {
+        const url = new URL("https://photoslibrary.googleapis.com/v1/mediaItems");
+        url.searchParams.append("pageSize", "100");
+        if (photosPageToken) url.searchParams.append("pageToken", photosPageToken);
+        
+        const photosRes = await fetch(url.toString(), {
+          headers: { Authorization: `Bearer ${account.accessToken}` }
+        });
+        
+        // If the user hasn't granted photoslibrary scope, skip this account gracefully
+        if (!photosRes.ok) {
+           console.warn(`Photos Library fetch failed for ${account.email}. Usually means missing scope. Status:`, photosRes.status);
+           break; 
+        }
+        
+        const data = await photosRes.json();
+        const mediaItems = data.mediaItems || [];
+        totalSynced += mediaItems.length;
+        
+        if (mediaItems.length > 0) {
+           const transaction = mediaItems.map((item: any) => {
+             const imageTimeStr = item.mediaMetadata?.creationTime;
+             let imageTime: Date | null = null;
+             
+             if (imageTimeStr) {
+               imageTime = new Date(imageTimeStr);
+               if (isNaN(imageTime.getTime())) {
+                 const fixedStr = imageTimeStr.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3');
+                 imageTime = new Date(fixedStr);
+                 if (isNaN(imageTime.getTime())) {
+                   imageTime = null;
+                 }
+               }
+             }
+             
+             return prisma.driveFile.upsert({
+               where: { id: item.id },
+               update: {
+                 name: item.filename || 'Untitled Photo',
+                 mimeType: item.mimeType || 'image/jpeg',
+                 size: 0n, // Google Photos API doesn't return file size
+                 parentId: null,
+                 thumbnailLink: `${item.baseUrl}=w2048-h2048`, // Request high quality URL
+                 imageTime: imageTime,
+                 source: "PHOTOS",
+                 updatedAt: imageTime || new Date(),
+               },
+               create: {
+                 id: item.id,
+                 accountId: account.id,
+                 name: item.filename || 'Untitled Photo',
+                 mimeType: item.mimeType || 'image/jpeg',
+                 size: 0n,
+                 parentId: null,
+                 thumbnailLink: `${item.baseUrl}=w2048-h2048`,
+                 imageTime: imageTime,
+                 source: "PHOTOS",
+                 updatedAt: imageTime || new Date(),
+               }
+             });
+           });
+           
+           await prisma.$transaction(transaction);
+        }
+        
+        photosPageToken = data.nextPageToken;
+      } while (photosPageToken);
 
       // Update lastSyncedAt
       await prisma.googleAccount.update({
