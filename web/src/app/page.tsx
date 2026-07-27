@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import Link from "next/link";
+import { SyncButton } from "@/components/SyncButton";
 
 export default async function Home() {
   const cookieStore = await cookies();
@@ -65,7 +66,7 @@ export default async function Home() {
                 );
               })}
               
-              <div className="pt-4">
+              <div className="pt-4 flex gap-4">
                 <Link 
                   href="/api/auth/google" 
                   className="inline-flex items-center gap-2 bg-[#1A1A1A] border border-[#333333] text-[#EAEAEA] px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#222222] transition-colors"
@@ -75,6 +76,8 @@ export default async function Home() {
                   </svg>
                   Connect Another Account
                 </Link>
+                
+                <SyncButton />
               </div>
             </div>
           )}
