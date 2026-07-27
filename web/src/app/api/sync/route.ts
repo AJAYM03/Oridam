@@ -24,7 +24,7 @@ export async function POST() {
       do {
         const res = await drive.files.list({
           q: "trashed = false",
-          fields: 'nextPageToken, files(id, name, mimeType, size, parents, modifiedTime)',
+          fields: 'nextPageToken, files(id, name, mimeType, size, parents, modifiedTime, thumbnailLink)',
           pageSize: 1000,
           pageToken: pageToken,
         });
@@ -41,6 +41,7 @@ export async function POST() {
                  mimeType: file.mimeType || '',
                  size: file.size ? BigInt(file.size) : 0n,
                  parentId: file.parents && file.parents.length > 0 ? file.parents[0] : null,
+                 thumbnailLink: file.thumbnailLink || null,
                  updatedAt: file.modifiedTime ? new Date(file.modifiedTime) : new Date(),
                },
                create: {
@@ -50,6 +51,7 @@ export async function POST() {
                  mimeType: file.mimeType || '',
                  size: file.size ? BigInt(file.size) : 0n,
                  parentId: file.parents && file.parents.length > 0 ? file.parents[0] : null,
+                 thumbnailLink: file.thumbnailLink || null,
                  updatedAt: file.modifiedTime ? new Date(file.modifiedTime) : new Date(),
                }
              });

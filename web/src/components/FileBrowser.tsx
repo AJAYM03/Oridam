@@ -12,6 +12,7 @@ export type ClientVirtualFile = {
   underlyingFolderIds?: string[];
   id?: string;
   accountId?: string;
+  thumbnailLink?: string;
 };
 
 function formatBytes(bytes: number) {
@@ -87,7 +88,7 @@ export function FileBrowser({ files, currentPath }: { files: ClientVirtualFile[]
             {selectedFile.mimeType.startsWith('image/') ? (
                // eslint-disable-next-line @next/next/no-img-element
                <img 
-                 src={`/api/download?id=${selectedFile.id}&account=${selectedFile.accountId}`}
+                 src={selectedFile.thumbnailLink ? selectedFile.thumbnailLink.replace('=s220', '=s2048') : `/api/download?id=${selectedFile.id}&account=${selectedFile.accountId}`}
                  alt={selectedFile.name}
                  className="w-full h-full object-contain drop-shadow-2xl rounded-sm"
                />

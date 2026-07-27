@@ -83,7 +83,8 @@ export default async function DrivePage({
           currentPath={currentPath} 
           files={files.map(f => ({
             ...f,
-            sizeStr: f.size.toString(), // Serialize BigInt for Client Component
+            sizeStr: f.size.toString(),
+            thumbnailLink: f.thumbnailLink,
           }))}
         />
       </div>

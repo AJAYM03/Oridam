@@ -6,11 +6,10 @@ export type VirtualFile = {
   mimeType: string;
   size: bigint;
   updatedAt: Date;
-  // For folders, we track all the underlying Google Drive IDs that make up this virtual folder
   underlyingFolderIds?: string[]; 
-  // For files, we track the specific Google Account and the true File ID
   id?: string;
   accountId?: string;
+  thumbnailLink?: string;
 };
 
 export async function getVirtualDirectory(userId: string, path: string): Promise<VirtualFile[]> {
@@ -104,7 +103,8 @@ export async function getVirtualDirectory(userId: string, path: string): Promise
         updatedAt: file.updatedAt,
         underlyingFolderIds: isFolder ? [file.id] : undefined,
         id: isFolder ? undefined : file.id,
-        accountId: file.accountId
+        accountId: file.accountId,
+        thumbnailLink: file.thumbnailLink || undefined,
       });
     }
   }
