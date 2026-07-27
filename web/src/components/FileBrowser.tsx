@@ -83,20 +83,20 @@ export function FileBrowser({ files, currentPath }: { files: ClientVirtualFile[]
             </div>
           </div>
           
-          <div className="flex-1 flex items-center justify-center relative p-8">
+          <div className="flex-1 flex items-center justify-center relative p-8 min-h-0 overflow-hidden">
             {selectedFile.mimeType.startsWith('image/') ? (
                // eslint-disable-next-line @next/next/no-img-element
                <img 
                  src={`/api/download?id=${selectedFile.id}&account=${selectedFile.accountId}`}
                  alt={selectedFile.name}
-                 className="max-w-full max-h-full object-contain drop-shadow-2xl rounded-sm"
+                 className="w-full h-full object-contain drop-shadow-2xl rounded-sm"
                />
             ) : selectedFile.mimeType.startsWith('video/') ? (
                <video 
                  src={`/api/download?id=${selectedFile.id}&account=${selectedFile.accountId}`}
                  controls
                  autoPlay
-                 className="max-w-full max-h-full drop-shadow-2xl rounded-sm"
+                 className="w-full h-full object-contain drop-shadow-2xl rounded-sm"
                />
             ) : (
                <div className="text-center">
