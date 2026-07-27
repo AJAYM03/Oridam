@@ -9,8 +9,7 @@ export async function GET() {
     prompt: 'consent',
     scope: [
       'https://www.googleapis.com/auth/drive',
-      'https://www.googleapis.com/auth/userinfo.email',
-      'https://www.googleapis.com/auth/photoslibrary.readonly'
+      'https://www.googleapis.com/auth/userinfo.email'
     ],
   });
 
